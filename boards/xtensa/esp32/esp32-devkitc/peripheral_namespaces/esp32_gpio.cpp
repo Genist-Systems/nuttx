@@ -1,89 +1,98 @@
 #include "esp32_peripherals.hpp"
 
-namespace ESP32_Devkitc::GPIO
+
+namespace ESP32::GPIO
 {
-    enum class gpio_direction {
-        Input,
-        Output,
-        InputOutput
-    };
-    
-    enum class gpio_pull {
-        None,
-        Up,
-        Down
-    };
-    
-    enum class gpio_strength {
-        Weak = 0,
-        Medium = 1,
-        Default = 2,
-        Strong = 2,
-        Max = 3
-    };
-
-    enum class gpio_function {
-        GPIO = 0,
-        Function1 = 1,
-        Function2 = 2,
-        Function3 = 3,
-        Function4 = 4,
-        Function5 = 5,
-        Function6 = 6 
-    };
-
-    enum class gpio_state {
-        GPIO_PIN_LOW = 0,
-        GPIO_PIN_HIGH = 1
-    };
-
-    struct gpio_config {
-        gpio_direction dir;
-        gpio_pull pull = gpio_pull::None;
-        bool open_drain = false;
-        gpio_strength drive = gpio_strength::Default;
-        gpio_function func = gpio_function::GPIO;
-    };
-    
-    int setup(int pin, const gpio_config& config) {
-        gpio_pinattr_t attr = 0;
-        
-        // Direction
-        if (config.dir == gpio_direction::Input || config.dir == gpio_direction::InputOutput) {
-            attr |= INPUT;
+    bool setPinType(const std::string& devPath, PinType type)
+    {
+        int fd = open(devPath.c_str(), O_RDWR);
+        if (fd < 0)
+        {
+            perror(("GPIO: open failed on " + devPath).c_str());
+            return false;
         }
-        if (config.dir == gpio_direction::Output || config.dir == gpio_direction::InputOutput) {
-            attr |= OUTPUT;
-        }
-        
-        // Pull resistors
-        if (config.pull == gpio_pull::Up) {
-            attr |= PULLUP;
-        } else if (config.pull == gpio_pull::Down) {
-            attr |= PULLDOWN;
-        }
-        
-        // Open drain
-        if (config.open_drain) {
-            attr |= OPEN_DRAIN;
-        }
-        
-        // Drive strength (clear + set)
-        attr &= ~(0b11 << DRIVE_SHIFT);
-        attr |= ((static_cast<uint32_t>(config.drive) + 1) << DRIVE_SHIFT);
 
-        // Function (clear + set)
-        attr &= ~(0b1111 << FUNCTION_SHIFT);
-        attr |= ((static_cast<uint32_t>(config.func) + 1) << FUNCTION_SHIFT);
-        
-        return esp32_configgpio(pin, attr);
+        int ret = ioctl(fd, GPIOC_SETPINTYPE, static_cast<unsigned long>(type));
+        if (ret < 0)
+        {
+            perror(("GPIO: ioctl(GPIOC_SETPINTYPE) failed on " + devPath).c_str());
+        }
+
+        close(fd);
+        return ret == 0;
     }
 
-    void write(int pin, gpio_state value) {
-        esp32_gpiowrite(pin, static_cast<bool>(value));
+    bool writePin(const std::string& devPath, bool value)
+    {
+        int fd = open(devPath.c_str(), O_RDWR);
+        if (fd < 0)
+        {
+            perror(("GPIO: open failed on " + devPath).c_str());
+            return false;
+        }
+
+        int ret = ioctl(fd, GPIOC_WRITE, static_cast<unsigned long>(value));
+        if (ret < 0)
+        {
+            perror(("GPIO: ioctl(GPIOC_WRITE) failed on " + devPath).c_str());
+        }
+
+        close(fd);
+        return ret == 0;
     }
 
-    gpio_state read(int pin) {
-        return static_cast<gpio_state>(esp32_gpioread(pin));
+    bool readPin(const std::string& devPath, bool& value)
+    {
+        int fd = open(devPath.c_str(), O_RDWR);
+        if (fd < 0)
+        {
+            perror(("GPIO: open failed on " + devPath).c_str());
+            return false;
+        }
+
+        int val = 0;
+        int ret = ioctl(fd, GPIOC_READ, (unsigned long)((uintptr_t)&val));
+        if (ret == 0)
+        {
+            value = (val != 0);
+        }
+        else
+        {
+            perror(("GPIO: ioctl(GPIOC_READ) failed on " + devPath).c_str());
+        }
+
+        close(fd);
+        return ret == 0;
     }
+
 }
+
+/*
+
+int main()
+{
+    std::string pin = "/dev/gpio0";
+
+    // Set as output
+    if (!GPIO::setPinType(pin, GPIO::PinType::Output)) {
+        std::cerr << "Failed to set pin type\n";
+        return 1;
+    }
+
+    // Write HIGH
+    if (!GPIO::writePin(pin, true)) {
+        std::cerr << "Failed to write to pin\n";
+        return 1;
+    }
+
+    // Read back
+    bool value = false;
+    if (GPIO::readPin(pin, value)) {
+        std::cout << "Pin value: " << value << "\n";
+    } else {
+        std::cerr << "Failed to read pin\n";
+    }
+
+    return 0;
+}
+*/
