@@ -5,66 +5,95 @@ extern "C"
     #include <fcntl.h>
     #include <unistd.h>
     #include <errno.h>
-    #include <cerrno>
-    #include <cstdio>
 
 
     #include <nuttx/ioexpander/gpio.h>
     #include <nuttx/timers/pwm.h>
+    #include <nuttx/i2c/i2c_master.h>
+    #include <nuttx/i2c/i2c_slave.h>
+
+    #include <sys/select.h>
+
 }
 
 #include <string>
+#include <cstring>
+#include <cstdio>
+#include <cerrno>
 
-namespace ESP32 {
-    namespace GPIO
+namespace ESP32::GPIO
+{
+
+    #ifdef CONFIG_DEV_GPIO
+    enum class PinStatus 
     {
-        enum class PinType {
-            Input                         = 0,  // GPIO_INPUT_PIN
-            InputPullUp                   = 1,  // GPIO_INPUT_PIN_PULLUP
-            InputPullDown                 = 2,  // GPIO_INPUT_PIN_PULLDOWN
-            Output                        = 3,  // GPIO_OUTPUT_PIN
-            OutputOpenDrain               = 4,  // GPIO_OUTPUT_PIN_OPENDRAIN
-
-            Interrupt                     = 5,  // GPIO_INTERRUPT_PIN
-            InterruptHigh                 = 6,  // GPIO_INTERRUPT_HIGH_PIN
-            InterruptLow                  = 7,  // GPIO_INTERRUPT_LOW_PIN
-            InterruptRising               = 8,  // GPIO_INTERRUPT_RISING_PIN
-            InterruptFalling              = 9,  // GPIO_INTERRUPT_FALLING_PIN
-            InterruptBoth                 = 10, // GPIO_INTERRUPT_BOTH_PIN
-
-            InterruptWakeup               = 11, // GPIO_INTERRUPT_PIN_WAKEUP
-            InterruptHighWakeup           = 12, // GPIO_INTERRUPT_HIGH_PIN_WAKEUP
-            InterruptLowWakeup            = 13, // GPIO_INTERRUPT_LOW_PIN_WAKEUP
-            InterruptRisingWakeup         = 14, // GPIO_INTERRUPT_RISING_PIN_WAKEUP
-            InterruptFallingWakeup        = 15, // GPIO_INTERRUPT_FALLING_PIN_WAKEUP
-            InterruptBothWakeup           = 16  // GPIO_INTERRUPT_BOTH_PIN_WAKEUP
-        };
-
-        bool setPinType(const std::string& devPath, PinType type);
-        bool writePin(const std::string& devPath, bool value);
-        bool readPin(const std::string& devPath, bool& value);
-    }
-
-    namespace PWM
+        GPIO_LOW, 
+        GPIO_HIGH
+    };
+    
+    class GPIO
     {
-        struct Config {
-            uint32_t frequency;
-            uint8_t dutyPercent; 
-            bool inverted = False;
-        };
+        public:
+            GPIO();
+            ~GPIO();
 
-        bool setup(const std::string& devPath, const Config& config);
-        bool start(const std::string& devPath);
-        bool stop(const std::string& devPath);
-    }
-
-    namespace I2C
-    {
-
-    }
-
-    namespace SPI
-    {
-
-    }
+            bool setPinType(const char* devPath, gpio_pintype_e type);
+            bool writePin(PinStatus value);
+            bool readPin(PinStatus& value);
+        private:
+            const char* _devPath;
+            gpio_pintype_e _pinType;
+            int _fd = -1;
+    };
+    #endif
+        
 }
+namespace ESP32::PWM
+{
+    class PWM
+    {
+    public:
+        PWM();
+        ~PWM();
+
+        bool setup(const char* devPath, struct pwm_info_s info);
+        bool editFreq(uint32_t newFreq);
+        bool editDuty(uint8_t newDutyPercent);
+        bool start(void);
+        bool stop(void);
+
+    private:
+        int _fd = -1;
+        struct pwm_info_s _config = {};
+    };
+}
+
+namespace ESP32::I2C
+{
+    
+}
+/*
+namespace ESP32::SPI
+{
+    class SPISlave
+    {
+        public:
+            SPISlave(const std::string& devPath, int timeoutSeconds = 10);
+
+            bool isAvailable();
+            bool Transmit(const std::vector<uint8_t>& data);
+            bool Receive(std::vector<uint8_t>& data, size_t maxLen);
+            bool TransmitReceive(const std::vector<uint8_t>& tx, std::vector<uint8_t>& rx);
+
+        private:
+            std::string _devPath;
+            int _timeout;
+
+            bool openDevice(int& fd);
+            void closeDevice(int fd);
+            bool waitForReadReady(int fd);
+    };
+
+}
+    */
+

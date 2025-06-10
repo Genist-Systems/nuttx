@@ -54,7 +54,9 @@
  * used.
  */
 
-#define GPIO_OUT1    15
+#define GPIO_OUT1 15
+#define GPIO_OUT2 16
+#define GPIO_OUT3 17
 
 /* Input pins. GPIO18 is used as an example, any other inputs could be
  * used.

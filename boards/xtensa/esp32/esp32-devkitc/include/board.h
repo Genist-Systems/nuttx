@@ -20,6 +20,33 @@
  *
  ****************************************************************************/
 
+
+
+ /*
+    Physical Layout of the DFRobot ESP32 WROOM-32UE
+    
+ *  RST
+ *  3V3
+ *
+ *  GND                             
+ *  EN                              VCC
+ *  SCK   - 18                      3V3
+ *  MOSI  - 23                      GND
+ *  MISO  - 19                      SCL  - 22
+ *  SCL   - 22                      SDA  - 21
+ *  SDA   - 21                      GPIO - 15
+ *  GPIO  -  2                      GPIO - 35
+ *  GPIO  - 13                      GPIO - 34
+ *  GPIO  - 14                      GPIO - 39
+ *  GPIO  -  0                      GPIO - 36
+ *  GPIO  - 26                      GPIO - 12
+ *  GPIO  - 25                      GPIO -  4
+ *  TX    -  1
+ *  RX    -  3                      GPIO - 17
+
+ 
+ 
+ */
 #ifndef __BOARDS_XTENSA_ESP32_ESP32_DEVKITC_INCLUDE_BOARD_H
 #define __BOARDS_XTENSA_ESP32_ESP32_DEVKITC_INCLUDE_BOARD_H
 
@@ -51,8 +78,8 @@
 
 /* GPIO pins used by the GPIO Subsystem */
 
-#define BOARD_NGPIOOUT    1 /* Amount of GPIO Output pins */
-#define BOARD_NGPIOIN     1 /* Amount of GPIO Input without Interruption */
-#define BOARD_NGPIOINT    1 /* Amount of GPIO Input w/ Interruption pins */
+#define BOARD_NGPIOOUT    3 /* Amount of GPIO Output pins */
+#define BOARD_NGPIOIN     3 /* Amount of GPIO Input without Interruption */
+#define BOARD_NGPIOINT    3 /* Amount of GPIO Input w/ Interruption pins */
 
 #endif /* __BOARDS_XTENSA_ESP32_ESP32_DEVKITC_INCLUDE_BOARD_H */
