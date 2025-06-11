@@ -20,33 +20,35 @@ extern "C"
 #include <cstring>
 #include <cstdio>
 #include <cerrno>
+#include <vector>
 
 namespace ESP32::GPIO
 {
 
+    // STILL HAVE TO FIGURE OUT HOW TO DO INTERRUPTS
     #ifdef CONFIG_DEV_GPIO
-    enum class PinStatus 
+    enum class PinStatus
     {
-        GPIO_LOW, 
-        GPIO_HIGH
+        GPIO_LOW = 0,
+        GPIO_HIGH = 1
     };
-    
+
     class GPIO
     {
-        public:
-            GPIO();
-            ~GPIO();
+    public:
+        GPIO();
+        ~GPIO();
 
-            bool setPinType(const char* devPath, gpio_pintype_e type);
-            bool writePin(PinStatus value);
-            bool readPin(PinStatus& value);
-        private:
-            const char* _devPath;
-            gpio_pintype_e _pinType;
-            int _fd = -1;
+        bool setPinType(const char* devPath, gpio_pintype_e type);
+        bool writePin(PinStatus value);
+        bool readPin(PinStatus& value);
+
+    private:
+        char _devPath[32] = {};
+        gpio_pintype_e _pinType{};
+        int _fd = -1;
     };
-    #endif
-        
+    #endif   
 }
 namespace ESP32::PWM
 {
@@ -68,10 +70,28 @@ namespace ESP32::PWM
     };
 }
 
+
 namespace ESP32::I2C
 {
-    
+    class I2C_Master
+    {
+        public:
+
+            I2C_Master();
+            ~I2C_Master();
+
+            bool setup(const char* devPath, const i2c_config_s config);
+            bool writeRegister(uint8_t reg, uint8_t value);
+            bool readRegister(uint8_t reg, uint8_t* buffer, int len);
+            bool shutdown();
+
+        private:
+            int _fd = -1;
+            i2c_config_s _config = {};
+    };
 }
+
+
 /*
 namespace ESP32::SPI
 {

@@ -1,112 +1,168 @@
 #include "esp32_peripherals.hpp"
 
-namespace ESP32::I2C
+
+using namespace ESP32::I2C;
+
+I2C_Master::I2C_Master() = default;
+
+I2C_Master::~I2C_Master()
 {
-    enum class Port : int
+    shutdown();
+}
+
+
+bool I2C_Master::setup(const char* devPath, const i2c_config_s config)
+{
+    shutdown();  // Close if already open
+
+    int fd = open(devPath, O_RDWR);
+    if (fd < 0)
     {
-        #if defined(CONFIG_ESP32_I2C0)
-            I2C0 = 0,
-        #endif
-        #if defined(CONFIG_ESP32_I2C1)
-            I2C1 = 1,
-        #endif
-    };
-    
-    namespace Master
-    {
-        
-
-
-        
-        struct Config
-        {
-            i2c_master_s* dev;
-            uint32_t frequency;
-            uint16_t address;
-            uint8_t addressLength;
-        };
-
-        inline i2c_master_s* initialize(Port port)
-        {
-        #ifdef CONFIG_ESPRESSIF_I2C_PERIPH_MASTER_MODE
-                return esp32_i2cbus_initialize(static_cast<int>(port));
-        #else
-                return nullptr;
-        #endif
-        }
-
-        inline bool uninitialize(const Config& config)
-        {
-        #ifdef CONFIG_ESPRESSIF_I2C_PERIPH_MASTER_MODE
-                return config.dev && esp32_i2cbus_uninitialize(config.dev) == 0;
-        #else
-                return false;
-        #endif
-        }
-
-        inline i2c_config_s toLowLevel(const Config& config)
-        {
-            return i2c_config_s{
-                .frequency = config.frequency,
-                .address = config.address,
-                .addrlen = config.addressLength
-            };
-        }
-
-        inline bool setup(const Config& config)
-        {
-            return config.dev && I2C_SETUP(config.dev) == 0;
-        }
-
-        inline bool shutdown(const Config& config)
-        {
-            return config.dev && I2C_SHUTDOWN(config.dev) == 0;
-        }
-
-        #ifdef CONFIG_I2C_RESET
-        inline bool reset(const Config& config)
-        {
-            return config.dev && I2C_RESET(config.dev) == 0;
-        }
-        #endif
-
-        inline bool write(const Config& config, const std::vector<uint8_t>& data)
-        {
-            auto low = toLowLevel(config);
-            return config.dev &&
-                i2c_write(config.dev, &low, data.data(), data.size()) == 0;
-        }
-
-        inline bool read(const Config& config, std::vector<uint8_t>& data)
-        {
-            auto low = toLowLevel(config);
-            return config.dev &&
-                i2c_read(config.dev, &low, data.data(), data.size()) == 0;
-        }
-
-        inline bool writeRead(const Config& config,
-                            const std::vector<uint8_t>& wdata,
-                            std::vector<uint8_t>& rdata)
-        {
-            auto low = toLowLevel(config);
-            return config.dev &&
-                i2c_writeread(config.dev,
-                                &low,
-                                wdata.data(), wdata.size(),
-                                rdata.data(), rdata.size()) == 0;
-        }
-
-        inline bool registerDevice(const Config& config, int bus)
-        {
-        #ifdef CONFIG_I2C_DRIVER
-                return config.dev && i2c_register(config.dev, bus) == 0;
-        #else
-                (void)config;
-                (void)bus;
-                return false;
-        #endif
-        }
+        perror("open");
+        return false;
     }
+
+    _fd = fd;
+    _config = config;
+    return true;
+}
+
+
+bool I2C_Master::writeRegister(uint8_t reg, uint8_t value)
+{
+    uint8_t buffer[2] = { reg, value };
+
+    struct i2c_msg_s msg;
+    msg.addr = _config.address;
+    msg.flags = 0;
+    msg.buffer = buffer;
+    msg.length = sizeof(buffer);
+    msg.frequency = _config.frequency;
+
+    struct i2c_transfer_s xfer = { .msgv = &msg, .msgc = 1 };
+
+    int result = ioctl(_fd, I2CIOC_TRANSFER, (unsigned long)&xfer);
+    if (result < 0) {
+        perror("I2C writeRegister");
+    }
+    return result == 0;
+}
+
+bool I2C_Master::readRegister(uint8_t reg, uint8_t* buffer, int len)
+{
+    struct i2c_msg_s msgs[2];
+
+    msgs[0].addr = _config.address;
+    msgs[0].flags = 0;
+    msgs[0].buffer = &reg;
+    msgs[0].length = 1;
+    msgs[0].frequency = _config.frequency;
+
+    msgs[1].addr = _config.address;
+    msgs[1].flags = I2C_M_READ;
+    msgs[1].buffer = buffer;
+    msgs[1].length = len;
+    msgs[1].frequency = _config.frequency;
+
+    struct i2c_transfer_s xfer = { .msgv = msgs, .msgc = 2 };
+
+    int result = ioctl(_fd, I2CIOC_TRANSFER, (unsigned long)&xfer);
+    if (result < 0) {
+        perror("I2C readRegister");
+    }
+    return result == 0;
+}
+
+
+bool I2C_Master::shutdown()
+{
+    if (_fd >= 0)
+    {
+        close(_fd);
+        _fd = -1;
+        return true;
+    }
+    return false;
+}
+
+
+/*
+I2C_Master::I2C_Master() = default;
+
+I2C_Master::~I2C_Master()
+{
+    shutdown();
+}
+
+
+bool I2C_Master::setup(Port port, const i2c_config_s config)
+{
+    shutdown(); // cleanup old dev if reused
+
+    i2c_master_s* dev = get_bus(port);
+    if (!dev)
+        return false;
+
+    if (I2C_SETUP(dev) != 0)
+    {
+        return false;
+    }
+
+    _port = port;
+    _dev = dev;
+    _config = config;
+    return true;
+}
+
+bool I2C_Master::write(const uint8_t* buffer, int length)
+{
+    return _dev &&
+        i2c_write(_dev, &_config, buffer, length) == 0;
+}
+
+bool I2C_Master::read(uint8_t* buffer, int length)
+{
+    return _dev &&
+        i2c_read(_dev, &_config, buffer, length) == 0;
+}
+
+bool I2C_Master::writeRead(const uint8_t* wbuffer, int wlen,
+                            uint8_t* rbuffer, int rlen)
+{
+    return _dev &&
+        i2c_writeread(_dev, &_config, wbuffer, wlen, rbuffer, rlen) == 0;
+}
+
+bool I2C_Master::shutdown()
+{
+    if (_dev)
+    {
+        bool ok = I2C_SHUTDOWN(_dev) == 0;
+        _dev = nullptr;
+        return ok;
+    }
+    return false;
+}
+
+
+i2c_master_s* I2C_Master::get_bus(Port port)
+{
+#ifdef CONFIG_ESPRESSIF_I2C_PERIPH_MASTER_MODE
+    return esp32_i2cbus_initialize(static_cast<int>(port));
+#else
+    return nullptr;
+#endif
+}
+*/
+
+
+
+
+
+
+
+
+
     
     #ifdef CONFIG_I2C_SLAVE
     namespace Slave
@@ -162,4 +218,4 @@ namespace ESP32::I2C
     
 
     
-}
+
