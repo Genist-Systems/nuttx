@@ -21,6 +21,8 @@ extern "C"
 #include <cstdio>
 #include <cerrno>
 #include <vector>
+#include <cstdint>
+#include <cstddef>
 
 namespace ESP32::GPIO
 {
@@ -58,7 +60,7 @@ namespace ESP32::PWM
         PWM();
         ~PWM();
 
-        bool setup(const char* devPath, struct pwm_info_s info);
+        bool setup(const char* devPath, const pwm_info_s info);
         bool editFreq(uint32_t newFreq);
         bool editDuty(uint8_t newDutyPercent);
         bool start(void);
@@ -66,7 +68,7 @@ namespace ESP32::PWM
 
     private:
         int _fd = -1;
-        struct pwm_info_s _config = {};
+        pwm_info_s _config = {};
     };
 }
 
@@ -92,28 +94,33 @@ namespace ESP32::I2C
 }
 
 
-/*
+
 namespace ESP32::SPI
 {
-    class SPISlave
+
+    class SPI_Slave
     {
         public:
-            SPISlave(const std::string& devPath, int timeoutSeconds = 10);
+            SPI_Slave();
+            ~SPI_Slave();
 
-            bool isAvailable();
-            bool Transmit(const std::vector<uint8_t>& data);
-            bool Receive(std::vector<uint8_t>& data, size_t maxLen);
-            bool TransmitReceive(const std::vector<uint8_t>& tx, std::vector<uint8_t>& rx);
+            bool setup(const char* devicePath, int timeoutSec, bool read_blocking);
+            void shutdown();
+
+            bool transmit(const uint8_t* data, size_t length);
+            bool receive(uint8_t* outBuffer, size_t maxLength, size_t& bytesReceived);
 
         private:
-            std::string _devPath;
-            int _timeout;
+            const char* _devicePath;
+            int _fd;
+            int _timeoutSec;
+            bool _isBlocking;
 
-            bool openDevice(int& fd);
-            void closeDevice(int fd);
-            bool waitForReadReady(int fd);
+            bool setBlocking(bool enable);
+            bool waitForRead();
     };
 
+
 }
-    */
+
 

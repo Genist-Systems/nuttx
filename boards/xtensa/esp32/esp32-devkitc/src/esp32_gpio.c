@@ -55,8 +55,6 @@
  */
 
 #define GPIO_OUT1 15
-#define GPIO_OUT2 17
-#define GPIO_OUT3 18
 
 /* Input pins. GPIO18 is used as an example, any other inputs could be
  * used.
@@ -123,9 +121,7 @@ static const struct gpio_operations_s gpout_ops =
 
 static const uint32_t g_gpiooutputs[BOARD_NGPIOOUT] =
 {
-  GPIO_OUT1,
-  GPIO_OUT2,
-  GPIO_OUT3
+  GPIO_OUT1
 };
 
 static struct esp32gpio_dev_s g_gpout[BOARD_NGPIOOUT];

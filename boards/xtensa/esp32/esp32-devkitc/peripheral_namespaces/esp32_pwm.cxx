@@ -9,7 +9,7 @@ PWM::~PWM()
         close(_fd);
 }
 
-bool PWM::setup(const char* devPath, struct pwm_info_s info)
+bool PWM::setup(const char* devPath, const pwm_info_s info)
 {
     if (_fd >= 0) {
         close(_fd);
