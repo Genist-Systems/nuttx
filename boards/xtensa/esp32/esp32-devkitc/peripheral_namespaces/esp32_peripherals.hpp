@@ -41,13 +41,13 @@ namespace ESP32::GPIO
         GPIO();
         ~GPIO();
 
-        bool setPinType(const char* devPath, gpio_pintype_e type);
+        bool setPinType(const char* devPath, enum gpio_pintype_e type);
         bool writePin(PinStatus value);
         bool readPin(PinStatus& value);
 
     private:
-        char _devPath[32] = {};
-        gpio_pintype_e _pinType{};
+        const char* _devPath = nullptr;
+        gpio_pintype_e _pinType = GPIO_OUTPUT_PIN;
         int _fd = -1;
     };
     #endif   
@@ -60,7 +60,7 @@ namespace ESP32::PWM
         PWM();
         ~PWM();
 
-        bool setup(const char* devPath, const pwm_info_s info);
+        bool setup(const char* devPath, struct pwm_info_s* info);
         bool editFreq(uint32_t newFreq);
         bool editDuty(uint8_t newDutyPercent);
         bool start(void);
@@ -68,7 +68,7 @@ namespace ESP32::PWM
 
     private:
         int _fd = -1;
-        pwm_info_s _config = {};
+        struct pwm_info_s* _config = nullptr;
     };
 }
 
@@ -82,14 +82,14 @@ namespace ESP32::I2C
             I2C_Master();
             ~I2C_Master();
 
-            bool setup(const char* devPath, const i2c_config_s config);
+            bool setup(const char* devPath, struct i2c_config_s* config);
             bool writeRegister(uint8_t reg, uint8_t value);
             bool readRegister(uint8_t reg, uint8_t* buffer, int len);
             bool shutdown();
 
         private:
             int _fd = -1;
-            i2c_config_s _config = {};
+            struct i2c_config_s* _config = nullptr;
     };
 }
 

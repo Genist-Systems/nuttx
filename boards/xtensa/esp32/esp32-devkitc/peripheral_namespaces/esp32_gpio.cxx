@@ -14,7 +14,7 @@ GPIO::~GPIO()
     }
 }
 
-bool GPIO::setPinType(const char* devPath, gpio_pintype_e type)
+bool GPIO::setPinType(const char* devPath, enum gpio_pintype_e type)
 {
     if (_fd >= 0) {
         close(_fd);
@@ -35,7 +35,7 @@ bool GPIO::setPinType(const char* devPath, gpio_pintype_e type)
     }
 
     _fd = fd;
-    strncpy(_devPath, devPath, sizeof(_devPath) - 1);
+    _devPath = devPath;
     _pinType = type;
     return true;
 }

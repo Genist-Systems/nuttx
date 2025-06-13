@@ -9,8 +9,14 @@ PWM::~PWM()
         close(_fd);
 }
 
-bool PWM::setup(const char* devPath, const pwm_info_s info)
+bool PWM::setup(const char* devPath, struct pwm_info_s* info)
 {
+    if (info == nullptr)
+    {
+        perror("pwm config");
+        return false;
+    }
+    
     if (_fd >= 0) {
         close(_fd);
         _fd = -1;
@@ -24,7 +30,7 @@ bool PWM::setup(const char* devPath, const pwm_info_s info)
 
     _config = info;
 
-    int ret = ioctl(_fd, PWMIOC_SETCHARACTERISTICS, (unsigned long)(uintptr_t)&_config);
+    int ret = ioctl(_fd, PWMIOC_SETCHARACTERISTICS, (unsigned long)(uintptr_t)_config);
     if (ret < 0) {
         perror("pwm ioctl set characteristics");
         close(_fd);
@@ -39,9 +45,9 @@ bool PWM::editFreq(uint32_t newFreq)
 {
     if (_fd < 0) return false;
 
-    _config.frequency = newFreq;
+    _config->frequency = newFreq;
 
-    int ret = ioctl(_fd, PWMIOC_SETCHARACTERISTICS, (unsigned long)(uintptr_t)&_config);
+    int ret = ioctl(_fd, PWMIOC_SETCHARACTERISTICS, (unsigned long)(uintptr_t)_config);
     if (ret < 0) {
         perror("pwm ioctl editFreq");
         return false;
@@ -58,11 +64,11 @@ bool PWM::editDuty(uint8_t newDutyPercent)
         newDutyPercent = 100;
     }
 
-    _config.duty = newDutyPercent
+    _config->duty = newDutyPercent
         ? b16divi(uitoub16(newDutyPercent) - 1, 100)
         : 0;
 
-    int ret = ioctl(_fd, PWMIOC_SETCHARACTERISTICS, (unsigned long)(uintptr_t)&_config);
+    int ret = ioctl(_fd, PWMIOC_SETCHARACTERISTICS, (unsigned long)(uintptr_t)_config);
     if (ret < 0) {
         perror("pwm ioctl editDuty");
         return false;

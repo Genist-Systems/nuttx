@@ -11,9 +11,15 @@ I2C_Master::~I2C_Master()
 }
 
 
-bool I2C_Master::setup(const char* devPath, const i2c_config_s config)
+bool I2C_Master::setup(const char* devPath, struct i2c_config_s* config)
 {
     shutdown();  // Close if already open
+
+    if (config == nullptr)
+    {
+        perror("i2c config");
+        return false;
+    }
 
     int fd = open(devPath, O_RDWR);
     if (fd < 0)
@@ -22,8 +28,11 @@ bool I2C_Master::setup(const char* devPath, const i2c_config_s config)
         return false;
     }
 
+    
+
     _fd = fd;
     _config = config;
+    
     return true;
 }
 
@@ -33,11 +42,11 @@ bool I2C_Master::writeRegister(uint8_t reg, uint8_t value)
     uint8_t buffer[2] = { reg, value };
 
     struct i2c_msg_s msg;
-    msg.addr = _config.address;
+    msg.addr = _config->address;
     msg.flags = 0;
     msg.buffer = buffer;
     msg.length = sizeof(buffer);
-    msg.frequency = _config.frequency;
+    msg.frequency = _config->frequency;
 
     struct i2c_transfer_s xfer = { .msgv = &msg, .msgc = 1 };
 
@@ -52,17 +61,17 @@ bool I2C_Master::readRegister(uint8_t reg, uint8_t* buffer, int len)
 {
     struct i2c_msg_s msgs[2];
 
-    msgs[0].addr = _config.address;
+    msgs[0].addr = _config->address;
     msgs[0].flags = 0;
     msgs[0].buffer = &reg;
     msgs[0].length = 1;
-    msgs[0].frequency = _config.frequency;
+    msgs[0].frequency = _config->frequency;
 
-    msgs[1].addr = _config.address;
+    msgs[1].addr = _config->address;
     msgs[1].flags = I2C_M_READ;
     msgs[1].buffer = buffer;
     msgs[1].length = len;
-    msgs[1].frequency = _config.frequency;
+    msgs[1].frequency = _config->frequency;
 
     struct i2c_transfer_s xfer = { .msgv = msgs, .msgc = 2 };
 
