@@ -5,32 +5,24 @@ extern "C"
     #include <fcntl.h>
     #include <unistd.h>
     #include <errno.h>
-
-
+    #include <netinet/in.h>
+    #include <arpa/inet.h>
     #include <nuttx/ioexpander/gpio.h>
     #include <nuttx/timers/pwm.h>
     #include <nuttx/i2c/i2c_master.h>
     #include <nuttx/i2c/i2c_slave.h>
 
-    #include <nuttx/fs/fs.h>
-
-    #include <nuttx/wireless/espnow.h>
-
     #include <sys/select.h>
 
 }
 
-#include <string>
+// #include <string>
 #include <cstring>
 #include <cstdio>
 #include <cerrno>
-#include <vector>
-#include <cstdint>
-#include <cstddef>
-#include <functional>
-
-
-
+// #include <vector>
+// #include <cstdint>
+// #include <cstddef>
 
 
 namespace ESP32::GPIO
@@ -132,27 +124,52 @@ namespace ESP32::SPI
 
 }
 
-namespace ESP32::ESPNOW
+namespace ESP32::WiFi
 {
-    class ESPNow
-    {
-        public:
-            using RecvCallback = std::function<int(const uint8_t*, const uint8_t*, uint16_t)>;
 
-            ESPNow(const uint8_t mac[6], int minor = 0);
-            ~ESPNow();
 
-            bool valid() const;
-            bool send(const uint8_t *data, uint16_t len);
-            bool register_callback(espnow_recv_cb_t cb);
+class UDPServer
+{
+public:
+    UDPServer(uint16_t port, size_t bufSize);  // Changed from uint16_t
+    ~UDPServer();
+    void recvLoop();
 
-        private:
-            int _fd;
-            char _devname[20];
-            uint8_t _mac[6];
-    };
+private:
+    int _sockfd;
+    socklen_t _addrLen;
+    size_t _bufSize;  // Also updated from uint16_t
+    struct sockaddr_in6 _server;
+    struct sockaddr_in6 _client;
 
-} // namespace ESP32
+    int check_buffer(unsigned char *buf);  // Declare this function
+};
+
+
+class UDPClient {
+public:
+    UDPClient(const char* server_ip, uint16_t server_port, uint16_t local_port, size_t bufSize);  // Changed to size_t
+    ~UDPClient();
+
+    void sendLoop();
+
+private:
+    int _sockfd;
+    struct sockaddr_in6 _serverAddr;
+    struct sockaddr_in6 _addr;
+    socklen_t _addrLen;
+    size_t _bufSize;
+
+    int createSocket(uint16_t local_port);
+    void fillBuffer(unsigned char *buf, int offset);
+};
+
+
+}
+
+
+
+
 
 
 
