@@ -7,6 +7,8 @@ extern "C"
     #include <errno.h>
     #include <netinet/in.h>
     #include <arpa/inet.h>
+    #include <netutils/netlib.h>
+
     #include <nuttx/ioexpander/gpio.h>
     #include <nuttx/timers/pwm.h>
     #include <nuttx/i2c/i2c_master.h>
@@ -131,37 +133,34 @@ namespace ESP32::WiFi
 class UDPServer
 {
 public:
-    UDPServer(uint16_t port, size_t bufSize);  // Changed from uint16_t
+    UDPServer(uint16_t port, const char* ifname, const char* ip);
     ~UDPServer();
-    void recvLoop();
+    int receiveMessage(uint8_t* buffer, size_t bufSize);
 
 private:
     int _sockfd;
     socklen_t _addrLen;
-    size_t _bufSize;  // Also updated from uint16_t
     struct sockaddr_in6 _server;
     struct sockaddr_in6 _client;
 
-    int check_buffer(unsigned char *buf);  // Declare this function
+    bool configureInterfaceIPv6(const char* ifname, const char* ip);
 };
 
 
 class UDPClient {
 public:
-    UDPClient(const char* server_ip, uint16_t server_port, uint16_t local_port, size_t bufSize);  // Changed to size_t
+    UDPClient(const char* server_ip, uint16_t server_port, uint16_t local_port, const char* ip);
     ~UDPClient();
 
-    void sendLoop();
+    int sendMessage(const char* msg, size_t msgLen);
 
 private:
     int _sockfd;
     struct sockaddr_in6 _serverAddr;
     struct sockaddr_in6 _addr;
     socklen_t _addrLen;
-    size_t _bufSize;
 
     int createSocket(uint16_t local_port);
-    void fillBuffer(unsigned char *buf, int offset);
 };
 
 
