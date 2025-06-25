@@ -3,7 +3,7 @@
 
 
 
-using namespace ESP32::WiFi;
+using namespace ESP32::WiFi::UDP;
 
 
 
@@ -128,10 +128,25 @@ int UDPServer::receiveMessage(uint8_t* buffer, size_t bufSize)
     return nbytes;
 }
 
+// printf("Starting UDPServer on wpan0...\n");
+
+    // UDPServer server(5471, "wpan0", "fe80::ff:fe00:a");
+
+    // uint8_t buffer[250];
+    // while (1)
+
+    // {
+    // int n = server.receiveMessage(buffer, sizeof(buffer));
+    //     if (n > 0)
+    //     {
+    //         printf("Client received: \"%.*s\"\n", n, buffer);
+    //     }
+    // }
 
 
 
-UDPClient::UDPClient(const char* server_ip, uint16_t server_port, uint16_t local_port, const char* ifname)
+
+UDPClient::UDPClient(uint16_t server_port, uint16_t local_port, const char* ifname, const char* server_ip)
   : _sockfd(-1), _addrLen(sizeof(struct sockaddr_in6))
 {
   if (netlib_ifup(ifname) < 0)
@@ -223,6 +238,21 @@ int UDPClient::sendMessage(const char* msg, size_t msgLen)
 
     return nbytes;
 }
+
+// const char* server_ip = "fe80::ff:fe00:a"; // Replace with actual server IP
+//     uint16_t server_port = 5471;
+//     uint16_t local_port = 5472;
+
+//     printf("Starting UDPClient to [%s]:%d...\n", server_ip, server_port);
+
+//     UDPClient client(server_port, local_port, "wpan0", server_ip);
+
+//     const char* msg = "Hello from client!";
+//     while(1)
+//     {
+//         client.sendMessage(msg, strlen(msg));
+//         usleep(1000000);
+//     }
 
 
 

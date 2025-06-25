@@ -1,7 +1,7 @@
 #pragma once
 extern "C"
 {
-    #include <sys/ioctl.h>
+    
     #include <fcntl.h>
     #include <unistd.h>
     #include <errno.h>
@@ -15,6 +15,15 @@ extern "C"
     #include <nuttx/i2c/i2c_slave.h>
 
     #include <sys/select.h>
+    #include <sys/socket.h>
+    #include <sys/ioctl.h>
+
+    #include "protocol.h"
+    #include "lorawan/uart_lorawan_layer.h"
+
+    #include <wireless/wapi.h>
+    
+
 
 }
 
@@ -126,9 +135,9 @@ namespace ESP32::SPI
 
 }
 
-namespace ESP32::WiFi
+namespace ESP32::WiFi::UDP
 {
-
+    
 
 class UDPServer
 {
@@ -149,7 +158,7 @@ private:
 
 class UDPClient {
 public:
-    UDPClient(const char* server_ip, uint16_t server_port, uint16_t local_port, const char* ip);
+    UDPClient(uint16_t server_port, uint16_t local_port, const char* ifname, const char* server_ip);
     ~UDPClient();
 
     int sendMessage(const char* msg, size_t msgLen);
@@ -164,6 +173,130 @@ private:
 };
 
 
+}
+
+namespace ESP32::WiFi::TCP
+{
+    class TCPServer {
+        public:
+            TCPServer(uint16_t port, const char* ip, const char* ifname, const char* ssid, const char* password);
+            ~TCPServer();
+
+            bool init();
+            bool acceptClient();
+
+            template<typename T>
+            bool receiveMessage(T& data)
+            {
+                // static_assert(std::is_trivially_copyable<T>::value, "T must be trivially copyable");
+
+                int received = read(_client_fd, &data, sizeof(T));
+                if (received <= 0)
+                {
+                    if (received == 0)
+                        printf("Client disconnected\n");
+                    else
+                        perror("read");
+
+                    return false;
+                }
+
+                printf("Received %d bytes\n", received);
+                return true;
+            }
+            
+            template<typename T>
+            bool sendMessage(const T& data)
+            {
+                // static_assert(std::is_trivially_copyable<T>::value, "T must be trivially copyable");
+
+                int sent = send(_client_fd, &data, sizeof(T), 0);
+                if (sent <= 0)
+                {
+                    perror("send");
+                    return false;
+                }
+
+                printf("Sent %d bytes\n", sent);
+                return true;
+            }
+
+            void closeAll();
+
+        private:
+
+            uint16_t _port;
+            const char* _ip;
+
+            const char* _ifname;
+
+            const char* _ssid;
+            const char* _password;
+
+            int _server_fd;
+            int _client_fd;
+
+            struct sockaddr_in _server_addr;
+            struct sockaddr_storage _client_addr; 
+
+        
+            bool configureWiFi();
+    };
+
+    class TCPClient {
+        public:
+            TCPClient(uint16_t port, const char* server_ip, const char* client_ip, const char* ifname, const char* ssid, const char* password);
+            ~TCPClient();
+
+            bool connectToServer();
+            
+            template<typename T>
+            bool sendMessage(const T& data)
+            {
+            //   static_assert(std::is_trivially_copyable<T>::value, "Data must be trivially copyable");
+
+            int sent = write(_sockfd, &data, sizeof(T));
+            if (sent <= 0)
+            {
+                perror("write");
+                return false;
+            }
+            return true;
+            }
+
+            template<typename T>
+            bool receiveMessage(T& data)
+            {
+            //   static_assert(std::is_trivially_copyable<T>::value, "Data must be trivially copyable");
+
+            int received = recv(_sockfd, &data, sizeof(T), 0);
+            if (received <= 0)
+            {
+                perror("recv");
+                return false;
+            }
+            return true;
+            }
+
+
+
+            void closeSocket();
+
+        private:
+            uint16_t _port;
+            const char* _server_ip;
+            const char* _client_ip;
+
+            const char* _ifname;
+
+            const char* _ssid;
+            const char* _password;
+
+            int _sockfd;
+            struct sockaddr_in _server_addr;
+
+            bool configureWiFi();
+    };
 }
 
 
