@@ -1,4 +1,4 @@
-#include "esp32_peripherals.hpp"
+#include "esp32_peripherals/esp32_peripherals.hpp"
 
 using namespace ESP32::SPI;
 
