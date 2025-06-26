@@ -30,6 +30,10 @@ ifeq ($(CONFIG_ESPRESSIF_ADC),y)
   CSRCS += esp32_board_adc.c
 endif
 
+ifeq ($(CONFIG_ESP32_ETX_GPIO),y)
+  CSRCS += esp32_etx_gpio.c
+endif
+
 ifeq ($(CONFIG_ONESHOT),y)
   CSRCS += esp32_oneshot.c
 endif

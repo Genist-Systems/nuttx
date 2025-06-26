@@ -55,20 +55,20 @@
  */
 
 #define I2C_MUX_0 25 // associated with /dev/gpio0 (MUST BE IN THIS ORDER)
-#define I2C_MUX_1 26 // associated with /dev/gpio1 (MUST BE IN THIS ORDER)
-#define I2C_MUX_2 0 // associated with /dev/gpio2 (MUST BE IN THIS ORDER)
+// #define I2C_MUX_1 26 // associated with /dev/gpio1 (MUST BE IN THIS ORDER)
+// #define I2C_MUX_2 0 // associated with /dev/gpio2 (MUST BE IN THIS ORDER)
 
 /* Input pins. GPIO18 is used as an example, any other inputs could be
  * used.
  */
 
-#define GPIO_IN1     18
+#define GPIO_IN1     13
 
 /* Interrupt pins.  GPIO22 is used as an example, any other inputs could be
  * used.
  */
 
-#define GPIO_IRQPIN1  22
+#define GPIO_IRQPIN1  15
 
 /****************************************************************************
  * Private Types
@@ -123,9 +123,9 @@ static const struct gpio_operations_s gpout_ops =
 
 static const uint32_t g_gpiooutputs[BOARD_NGPIOOUT] =
 {
-  I2C_MUX_0,
-  I2C_MUX_1,
-  I2C_MUX_2
+  I2C_MUX_0
+  // I2C_MUX_1,
+  // I2C_MUX_2
 };
 
 static struct esp32gpio_dev_s g_gpout[BOARD_NGPIOOUT];

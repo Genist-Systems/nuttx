@@ -2,6 +2,14 @@
 
 #ifdef CONFIG_DEV_GPIO
 
+
+
+namespace ESP32::GPIO {
+
+void (*GPIO::_userCallback)(void) = nullptr; 
+
+} 
+
 using namespace ESP32::GPIO;
 
 GPIO::GPIO() = default;
@@ -74,39 +82,55 @@ bool GPIO::readPin(PinStatus& value)
     }
 }
 
+bool GPIO::attachInterrupt(int signo, void (*user_callback)(void))
+{
+    if (_fd < 0) {
+        fprintf(stderr, "GPIO not initialized\n");
+        return false;
+    }
+
+    if (_pinType != GPIO_INTERRUPT_PIN) {
+        fprintf(stderr, "GPIO not set as valid interrupt type\n");
+        return false;
+    }
+
+    // Save user callback
+    _userCallback = user_callback;
+
+    // Register signal handler
+    struct sigaction sa = {};
+    sa.sa_handler = _signal_handler;
+    sigemptyset(&sa.sa_mask);
+    sa.sa_flags = 0;
+
+    if (sigaction(signo, &sa, nullptr) < 0) {
+        perror("sigaction");
+        return false;
+    }
+
+    // Register sigevent
+    struct sigevent sev = {};
+    sev.sigev_notify = SIGEV_SIGNAL;
+    sev.sigev_signo = signo;
+
+    if (ioctl(_fd, GPIOC_REGISTER, (unsigned long)&sev) < 0) {
+        perror("gpio ioctl GPIOC_REGISTER");
+        return false;
+    }
+
+    return true;
+}
+
+void GPIO::_signal_handler(int signo)
+{
+    if (_userCallback) {
+        _userCallback();
+    } else {
+        printf("Interrupt %d received (no callback set)\n", signo);
+    }
+}
+
+
+
 #endif // CONFIG_DEV_GPIO
 
-
-    
-
-
-
-/*
-
-int main()
-{
-    std::string pin = "/dev/gpio0";
-
-    // Set as output
-    if (!GPIO::setPinType(pin, GPIO::PinType::Output)) {
-        std::cerr << "Failed to set pin type\n";
-        return 1;
-    }
-
-    // Write HIGH
-    if (!GPIO::writePin(pin, true)) {
-        std::cerr << "Failed to write to pin\n";
-        return 1;
-    }
-
-    // Read back
-    bool value = false;
-    if (GPIO::readPin(pin, value)) {
-        std::cout << "Pin value: " << value << "\n";
-    } else {
-        std::cerr << "Failed to read pin\n";
-    }
-
-    return 0;
-}
-*/

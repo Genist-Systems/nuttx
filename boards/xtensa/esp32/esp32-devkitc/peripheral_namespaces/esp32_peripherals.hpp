@@ -47,20 +47,25 @@ namespace ESP32::GPIO
         GPIO_HIGH = 1
     };
 
-    class GPIO
-    {
-    public:
-        GPIO();
-        ~GPIO();
+    
 
-        bool setPinType(const char* devPath, enum gpio_pintype_e type);
-        bool writePin(PinStatus value);
-        bool readPin(PinStatus& value);
+    class GPIO {
+        public:
+            GPIO();
+            ~GPIO();
 
-    private:
-        const char* _devPath = nullptr;
-        gpio_pintype_e _pinType = GPIO_OUTPUT_PIN;
-        int _fd = -1;
+            bool setPinType(const char* devPath, enum gpio_pintype_e type);
+            bool writePin(PinStatus value);
+            bool readPin(PinStatus& value);
+            bool attachInterrupt(int signo, void (*user_callback)(void));
+
+        private:
+            static void (*_userCallback)(void); 
+            static void _signal_handler(int signo);
+
+            const char* _devPath = nullptr;
+            gpio_pintype_e _pinType = GPIO_OUTPUT_PIN;
+            int _fd = -1;
     };
     #endif   
 }

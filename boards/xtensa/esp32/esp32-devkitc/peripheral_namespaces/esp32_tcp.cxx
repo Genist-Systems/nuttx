@@ -126,6 +126,19 @@ bool TCPServer::configureWiFi()
         return false;
     }
 
+    struct in_addr ipaddr;
+    if (!inet_aton(_ip, &ipaddr))
+    {
+        perror("inet_aton (client IP)");
+        return false;
+    }
+    #ifdef CONFIG_NET_IPv4
+    if (netlib_set_ipv4addr(_ifname, &ipaddr) < 0)
+    {
+        perror("netlib_set_ipv4addr");
+        return false;
+    }
+    #endif
     // Set WPA2-PSK with CCMP cipher (equivalent to: wapi psk wlan0 _password 3 2)
     int ret = wpa_driver_wext_set_auth_param(sock, _ifname,
                                            IW_AUTH_WPA_VERSION,
@@ -160,7 +173,7 @@ bool TCPServer::configureWiFi()
         return false;
     }
 
-    printf("SoftAP (Master) Wi-Fi secured.\n");
+    // printf("SoftAP (Master) Wi-Fi secured.\n");
     
     // Close the WiFi configuration socket
     close(sock);
@@ -267,13 +280,13 @@ bool TCPClient::configureWiFi()
         perror("inet_aton (client IP)");
         return false;
     }
-
+    #ifdef CONFIG_NET_IPv4
     if (netlib_set_ipv4addr(_ifname, &ipaddr) < 0)
     {
         perror("netlib_set_ipv4addr");
         return false;
     }
-
+    #endif
 
     int ret = wpa_driver_wext_set_auth_param(sock, _ifname,
                                              IW_AUTH_CIPHER_PAIRWISE,
@@ -303,7 +316,7 @@ bool TCPClient::configureWiFi()
         return false;
     }
 
-    printf("SoftAP (Master) Wi-Fi with CCMP secured (no WPA version).\n");
+    // printf("SoftAP (Master) Wi-Fi with CCMP secured (no WPA version).\n");
     close(sock);
     return true;
 }

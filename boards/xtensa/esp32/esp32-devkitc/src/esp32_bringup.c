@@ -191,6 +191,10 @@
 #  include "esp32_board_adc.h"
 #endif
 
+#ifdef CONFIG_ESP32_ETX_GPIO
+#include "esp32_etx_gpio.h"
+#endif
+
 #include "esp32-devkitc.h"
 
 /****************************************************************************
@@ -214,6 +218,15 @@
 int esp32_bringup(void)
 {
   int ret;
+
+#ifdef CONFIG_ESP32_ETX_GPIO
+/* Register the EmbeTronicX GPIO Driver */
+ret = etx_gpio_driver_init();
+if (ret < 0)
+  {
+    syslog(LOG_ERR, "ERROR: etx_gpio_driver_init() failed: %d\n", ret);
+  }
+#endif
 
 #ifdef CONFIG_ESP32_AES_ACCELERATOR
   ret = esp32_aes_init();
