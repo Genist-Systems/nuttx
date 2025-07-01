@@ -121,6 +121,47 @@ bool GPIO::attachInterrupt(int signo, void (*user_callback)(void))
     return true;
 }
 
+bool GPIO::detachInterrupt(int signo)
+{
+    if (_fd < 0) {
+        fprintf(stderr, "GPIO not initialized\n");
+        return false;
+    }
+
+    if (_pinType != GPIO_INTERRUPT_PIN) {
+        fprintf(stderr, "GPIO not configured as interrupt pin\n");
+        return false;
+    }
+
+    // Unregister from the GPIO driver
+    struct sigevent sev = {};
+    sev.sigev_notify = SIGEV_SIGNAL;
+    sev.sigev_signo = signo;
+
+    if (ioctl(_fd, GPIOC_UNREGISTER, (unsigned long)&sev) < 0) {
+        perror("gpio ioctl GPIOC_UNREGISTER");
+        return false;
+    }
+
+    // Remove the signal handler (optional but clean)
+    struct sigaction sa = {};
+    sa.sa_handler = SIG_DFL;  // Reset to default handler
+    sigemptyset(&sa.sa_mask);
+    sa.sa_flags = 0;
+
+    if (sigaction(signo, &sa, nullptr) < 0) {
+        perror("sigaction detach");
+        return false;
+    }
+
+    // Clear the static callback
+    _userCallback = nullptr;
+
+    return true;
+}
+
+
+
 void GPIO::_signal_handler(int signo)
 {
     if (_userCallback) {

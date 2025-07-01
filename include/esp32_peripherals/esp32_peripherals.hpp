@@ -58,6 +58,7 @@ namespace ESP32::GPIO
             bool writePin(PinStatus value);
             bool readPin(PinStatus& value);
             bool attachInterrupt(int signo, void (*user_callback)(void));
+            bool detachInterrupt(int signo);
 
         private:
             static void (*_userCallback)(void); 

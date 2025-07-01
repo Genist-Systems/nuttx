@@ -62,7 +62,7 @@
  * used.
  */
 
-#define GPIO_IN1     13
+#define GPIO_IN1     35
 
 /* Interrupt pins.  GPIO22 is used as an example, any other inputs could be
  * used.
