@@ -23,18 +23,18 @@ bool TCPServer::init()
     if (!configureWiFi())
         return false;
     
-    config_lorawan_radioenge_t lora_config;
-    snprintf(lora_config.application_session_key, APP_SESSION_KEY_SIZE,
-                "00:00:00:00:00:00:00:00:00:00:00:00:00:00:00:00");
-    snprintf(lora_config.network_session_key, NW_SESSION_KEY_SIZE,
-                "00:00:00:00:00:00:00:00:00:00:00:00:00:00:00:00");
-    snprintf(lora_config.application_eui, APP_EUI_SIZE,
-                "00:00:00:00:00:00:00:00");
-    snprintf(lora_config.device_address, DEVICE_ADDRESS_SIZE,
-                "00:00:00:00");
-    snprintf(lora_config.channel_mask, CHANNEL_MASK_SIZE,
-                "00FF:0000:0000:0000:0000:0000");
-    lorawan_radioenge_init(lora_config);
+    // config_lorawan_radioenge_t lora_config;
+    // snprintf(lora_config.application_session_key, APP_SESSION_KEY_SIZE,
+    //             "00:00:00:00:00:00:00:00:00:00:00:00:00:00:00:00");
+    // snprintf(lora_config.network_session_key, NW_SESSION_KEY_SIZE,
+    //             "00:00:00:00:00:00:00:00:00:00:00:00:00:00:00:00");
+    // snprintf(lora_config.application_eui, APP_EUI_SIZE,
+    //             "00:00:00:00:00:00:00:00");
+    // snprintf(lora_config.device_address, DEVICE_ADDRESS_SIZE,
+    //             "00:00:00:00");
+    // snprintf(lora_config.channel_mask, CHANNEL_MASK_SIZE,
+    //             "00FF:0000:0000:0000:0000:0000");
+    // lorawan_radioenge_init(lora_config);
 
     _server_fd = socket(PF_INET, SOCK_STREAM, 0);
     if (_server_fd < 0)

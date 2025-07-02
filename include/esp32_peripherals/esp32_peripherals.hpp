@@ -18,8 +18,8 @@ extern "C"
     #include <sys/socket.h>
     #include <sys/ioctl.h>
 
-    #include "protocol.h"
-    #include "lorawan/uart_lorawan_layer.h"
+    // #include "protocol.h"
+    // #include "lorawan/uart_lorawan_layer.h"
 
     #include <wireless/wapi.h>
     
@@ -39,7 +39,6 @@ extern "C"
 namespace ESP32::GPIO
 {
 
-    // STILL HAVE TO FIGURE OUT HOW TO DO INTERRUPTS
     #ifdef CONFIG_DEV_GPIO
     enum class PinStatus
     {
