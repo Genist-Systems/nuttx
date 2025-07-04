@@ -5,8 +5,8 @@ using namespace ESP32::WiFi::TCP;
 
 
 
-TCPServer::TCPServer(uint16_t port, const char* ip, const char* ifname, const char* ssid, const char* password)
-    : _port(port), _ip(ip), _ifname(ifname), _ssid(ssid), _password(password), _server_fd(-1), _client_fd(-1)
+TCPServer::TCPServer(const TCPSettings& settings)
+    : _port(settings.port), _server_ip(settings.server_ip), _ifname(settings.ifname), _ssid(settings.ssid), _password(settings.password), _server_fd(-1), _client_fd(-1)
 {
     memset(&_server_addr, 0, sizeof(_server_addr));
     memset(&_client_addr, 0, sizeof(_client_addr));
@@ -45,7 +45,7 @@ bool TCPServer::init()
 
     _server_addr.sin_family = AF_INET;
     _server_addr.sin_port = htons(_port);
-    _server_addr.sin_addr.s_addr = inet_addr(_ip);
+    _server_addr.sin_addr.s_addr = inet_addr(_server_ip);
 
     if (bind(_server_fd, (struct sockaddr*)&_server_addr,
                 sizeof(_server_addr)) < 0)
@@ -60,7 +60,7 @@ bool TCPServer::init()
         return false;
     }
 
-    printf("Listening on %s:%d\n", _ip, _port);
+    printf("Listening on %s:%d\n", _server_ip, _port);
     return true;
 }
 
@@ -127,7 +127,7 @@ bool TCPServer::configureWiFi()
     }
 
     struct in_addr ipaddr;
-    if (!inet_aton(_ip, &ipaddr))
+    if (!inet_aton(_server_ip, &ipaddr))
     {
         perror("inet_aton (client IP)");
         return false;
@@ -196,8 +196,8 @@ void TCPServer::closeAll()
 
 
 
-TCPClient::TCPClient(uint16_t port, const char* server_ip, const char* client_ip, const char* ifname, const char* ssid, const char* password)
-  : _port(port), _server_ip(server_ip), _client_ip(client_ip), _ifname(ifname), _ssid(ssid), _password(password), _sockfd(-1)
+TCPClient::TCPClient(const TCPSettings& settings)
+  : _port(settings.port), _server_ip(settings.server_ip), _client_ip(settings.client_ip), _ifname(settings.ifname), _ssid(settings.ssid), _password(settings.password), _sockfd(-1)
 {
   memset(&_server_addr, 0, sizeof(_server_addr));
 }

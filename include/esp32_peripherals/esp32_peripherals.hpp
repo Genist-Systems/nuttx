@@ -182,9 +182,19 @@ private:
 
 namespace ESP32::WiFi::TCP
 {
+    struct TCPSettings {
+        uint16_t port = 5000;
+        const char* server_ip = nullptr;
+        const char* client_ip = nullptr;
+        const char* ifname = nullptr;
+        const char* ssid = nullptr;
+        const char* password = nullptr;
+    };
+
+    
     class TCPServer {
         public:
-            TCPServer(uint16_t port, const char* ip, const char* ifname, const char* ssid, const char* password);
+            TCPServer(const TCPSettings& settings);
             ~TCPServer();
 
             bool init();
@@ -193,7 +203,6 @@ namespace ESP32::WiFi::TCP
             template<typename T>
             bool receiveMessage(T& data)
             {
-                // static_assert(std::is_trivially_copyable<T>::value, "T must be trivially copyable");
 
                 int received = read(_client_fd, &data, sizeof(T));
                 if (received <= 0)
@@ -213,7 +222,6 @@ namespace ESP32::WiFi::TCP
             template<typename T>
             bool sendMessage(const T& data)
             {
-                // static_assert(std::is_trivially_copyable<T>::value, "T must be trivially copyable");
 
                 int sent = send(_client_fd, &data, sizeof(T), 0);
                 if (sent <= 0)
@@ -231,7 +239,7 @@ namespace ESP32::WiFi::TCP
         private:
 
             uint16_t _port;
-            const char* _ip;
+            const char* _server_ip;
 
             const char* _ifname;
 
@@ -250,7 +258,7 @@ namespace ESP32::WiFi::TCP
 
     class TCPClient {
         public:
-            TCPClient(uint16_t port, const char* server_ip, const char* client_ip, const char* ifname, const char* ssid, const char* password);
+            TCPClient(const TCPSettings& settings);
             ~TCPClient();
 
             bool connectToServer();
