@@ -182,7 +182,7 @@ private:
 
 namespace ESP32::WiFi::TCP
 {
-    struct TCPSettings {
+    struct TCP_Settings {
         uint16_t port = 5000;
         const char* server_ip = nullptr;
         const char* client_ip = nullptr;
@@ -194,7 +194,7 @@ namespace ESP32::WiFi::TCP
     
     class TCPServer {
         public:
-            TCPServer(const TCPSettings& settings);
+            TCPServer(const TCP_Settings& settings);
             ~TCPServer();
 
             bool init();
@@ -258,7 +258,7 @@ namespace ESP32::WiFi::TCP
 
     class TCPClient {
         public:
-            TCPClient(const TCPSettings& settings);
+            TCPClient(const TCP_Settings& settings);
             ~TCPClient();
 
             bool connectToServer();
