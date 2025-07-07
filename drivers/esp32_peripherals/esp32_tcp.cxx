@@ -5,7 +5,7 @@ using namespace ESP32::WiFi::TCP;
 
 
 
-TCPServer::TCPServer(const TCPSettings& settings)
+TCPServer::TCPServer(const TCP_Settings& settings)
     : _port(settings.port), _server_ip(settings.server_ip), _ifname(settings.ifname), _ssid(settings.ssid), _password(settings.password), _server_fd(-1), _client_fd(-1)
 {
     memset(&_server_addr, 0, sizeof(_server_addr));
@@ -196,7 +196,7 @@ void TCPServer::closeAll()
 
 
 
-TCPClient::TCPClient(const TCPSettings& settings)
+TCPClient::TCPClient(const TCP_Settings& settings)
   : _port(settings.port), _server_ip(settings.server_ip), _client_ip(settings.client_ip), _ifname(settings.ifname), _ssid(settings.ssid), _password(settings.password), _sockfd(-1)
 {
   memset(&_server_addr, 0, sizeof(_server_addr));
