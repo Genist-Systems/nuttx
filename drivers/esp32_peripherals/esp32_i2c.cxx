@@ -37,15 +37,39 @@ bool I2C_Master::setup(const char* devPath, struct i2c_config_s* config)
 }
 
 
+
+bool I2C_Master::write(uint8_t* data, size_t length)
+{
+    if (data == nullptr || length == 0) {
+        fprintf(stderr, "I2C write: invalid data or length\n");
+        return false;
+    }
+
+    struct i2c_msg_s msg;
+    msg.addr = _config->address;
+    msg.flags = 0;  // write
+    msg.buffer = data;
+    msg.length = length;
+    msg.frequency = _config->frequency;
+
+    struct i2c_transfer_s xfer = { .msgv = &msg, .msgc = 1 };
+
+    int result = ioctl(_fd, I2CIOC_TRANSFER, (unsigned long)&xfer);
+    if (result < 0) {
+        perror("I2C write");
+    }
+    return result == 0;
+}
+
 bool I2C_Master::writeRegister(uint8_t reg, uint8_t value)
 {
     uint8_t buffer[2] = { reg, value };
 
     struct i2c_msg_s msg;
-    msg.addr = _config->address;
-    msg.flags = 0;
-    msg.buffer = buffer;
-    msg.length = sizeof(buffer);
+    msg.addr      = _config->address;
+    msg.flags     = 0; // Write
+    msg.buffer    = buffer;
+    msg.length    = sizeof(buffer);
     msg.frequency = _config->frequency;
 
     struct i2c_transfer_s xfer = { .msgv = &msg, .msgc = 1 };
@@ -54,30 +78,66 @@ bool I2C_Master::writeRegister(uint8_t reg, uint8_t value)
     if (result < 0) {
         perror("I2C writeRegister");
     }
+
     return result == 0;
 }
 
-bool I2C_Master::readRegister(uint8_t reg, uint8_t* buffer, int len)
+bool I2C_Master::writeRegister16(uint8_t reg, uint16_t value)
 {
+    uint8_t buffer[3] = {
+        reg,
+        static_cast<uint8_t>(value & 0xFF),        // LSB
+        static_cast<uint8_t>((value >> 8) & 0xFF)   // MSB
+    };
+
+    struct i2c_msg_s msg = {
+        .addr      = _config->address,
+        .flags     = 0,
+        .buffer    = buffer,
+        .length    = sizeof(buffer),
+        .frequency = _config->frequency
+    };
+
+    struct i2c_transfer_s xfer = { .msgv = &msg, .msgc = 1 };
+
+    int result = ioctl(_fd, I2CIOC_TRANSFER, (unsigned long)&xfer);
+    if (result < 0) {
+        perror("I2C writeRegister16");
+    }
+
+    return result == 0;
+}
+
+
+
+bool I2C_Master::readRegister(uint8_t reg, uint8_t* buffer, size_t length)
+{
+    if (buffer == nullptr || length == 0) {
+        fprintf(stderr, "I2C read: invalid buffer or length\n");
+        return false;
+    }
+
     struct i2c_msg_s msgs[2];
 
+    // First message is the register to read from
     msgs[0].addr = _config->address;
-    msgs[0].flags = 0;
+    msgs[0].flags = 0;  // Write to the register
     msgs[0].buffer = &reg;
     msgs[0].length = 1;
     msgs[0].frequency = _config->frequency;
 
+    // Second message is to read the data from the register
     msgs[1].addr = _config->address;
-    msgs[1].flags = I2C_M_READ;
+    msgs[1].flags = I2C_M_READ;  // Read
     msgs[1].buffer = buffer;
-    msgs[1].length = len;
+    msgs[1].length = length;
     msgs[1].frequency = _config->frequency;
 
     struct i2c_transfer_s xfer = { .msgv = msgs, .msgc = 2 };
 
     int result = ioctl(_fd, I2CIOC_TRANSFER, (unsigned long)&xfer);
     if (result < 0) {
-        perror("I2C readRegister");
+        perror("I2C read");
     }
     return result == 0;
 }

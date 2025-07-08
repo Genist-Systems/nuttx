@@ -100,8 +100,10 @@ namespace ESP32::I2C
             ~I2C_Master();
 
             bool setup(const char* devPath, struct i2c_config_s* config);
+            bool write(uint8_t* data, size_t length);
             bool writeRegister(uint8_t reg, uint8_t value);
-            bool readRegister(uint8_t reg, uint8_t* buffer, int len);
+            bool writeRegister16(uint8_t reg, uint16_t value);
+            bool readRegister(uint8_t reg, uint8_t* buffer, size_t length);
             bool shutdown();
 
         private:
