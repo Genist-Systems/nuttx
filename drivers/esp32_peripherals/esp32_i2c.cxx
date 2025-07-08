@@ -90,15 +90,18 @@ bool I2C_Master::writeRegister16(uint8_t reg, uint16_t value)
         static_cast<uint8_t>((value >> 8) & 0xFF)   // MSB
     };
 
-    struct i2c_msg_s msg = {
-        .addr      = _config->address,
-        .flags     = 0,
-        .buffer    = buffer,
-        .length    = sizeof(buffer),
-        .frequency = _config->frequency
-    };
+    struct i2c_msg_s msg;
+    msg.addr      = _config->address;
+    msg.flags     = 0;
+    msg.buffer    = buffer;
+    msg.length    = sizeof(buffer);
+    msg.frequency = _config->frequency;
 
-    struct i2c_transfer_s xfer = { .msgv = &msg, .msgc = 1 };
+
+    struct i2c_transfer_s xfer;
+    xfer.msgv = &msg;
+    xfer.msgc = 1;
+
 
     int result = ioctl(_fd, I2CIOC_TRANSFER, (unsigned long)&xfer);
     if (result < 0) {
