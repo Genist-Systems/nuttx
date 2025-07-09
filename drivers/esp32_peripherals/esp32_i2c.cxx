@@ -145,6 +145,33 @@ bool I2C_Master::readRegister(uint8_t reg, uint8_t* buffer, size_t length)
     return result == 0;
 }
 
+bool I2C_Master::readRegister(uint8_t* reg, uint8_t* buffer, size_t length)
+{
+    if (!reg || !buffer || length == 0) {
+        fprintf(stderr, "I2C read: invalid reg or buffer or length\n");
+        return false;
+    }
+
+    struct i2c_msg_s msgs[2];
+
+    msgs[0].addr = _config->address;
+    msgs[0].flags = 0;
+    msgs[0].buffer = reg;
+    msgs[0].length = 2;  // 2-byte register address
+    msgs[0].frequency = _config->frequency;
+
+    msgs[1].addr = _config->address;
+    msgs[1].flags = I2C_M_READ;
+    msgs[1].buffer = buffer;
+    msgs[1].length = length;
+    msgs[1].frequency = _config->frequency;
+
+    struct i2c_transfer_s xfer = { .msgv = msgs, .msgc = 2 };
+
+    return ioctl(_fd, I2CIOC_TRANSFER, (unsigned long)&xfer) == 0;
+}
+
+
 
 bool I2C_Master::shutdown()
 {

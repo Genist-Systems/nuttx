@@ -103,7 +103,10 @@ namespace ESP32::I2C
             bool write(uint8_t* data, size_t length);
             bool writeRegister(uint8_t reg, uint8_t value);
             bool writeRegister16(uint8_t reg, uint16_t value);
+
             bool readRegister(uint8_t reg, uint8_t* buffer, size_t length);
+            bool readRegister(uint8_t* reg, uint8_t* buffer, size_t length);
+
             bool shutdown();
 
         private:
