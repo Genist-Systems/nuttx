@@ -1,6 +1,6 @@
 sleep 1
 
-echo "hi"
+echo "just testing the startup script"
 
-optical_encoder &
-loadcell &
+#optical_encoder &
+#loadcell &
